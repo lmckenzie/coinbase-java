@@ -30,11 +30,15 @@ import retrofit2.http.Query;
 import retrofit2.http.QueryMap;
 
 public interface ApiInterface {
+
+    @POST(ApiConstants.TOKEN)
+    Call<AccessToken> getTokens(@Body Map<String, Object> body);
+
     @POST(ApiConstants.TOKEN)
     Call<AccessToken> refreshTokens(@Body HashMap<String, Object> body);
 
     @POST(ApiConstants.REVOKE)
-    Call<Void> revokeToken(@Body HashMap<String, Object> body);
+    Call<Void> revokeToken(@Body Map<String, Object> body);
 
     @GET(ApiConstants.USER)
     Call<User> getUser();
@@ -70,10 +74,12 @@ public interface ApiInterface {
                                      @Path("transaction_id") String transactionId,
                                      @Query("expand[]") List<String> expandOptions);
 
-    @POST(com.coinbase.ApiConstants.ACCOUNTS + "/{account_id}/" + com.coinbase.ApiConstants.TRANSACTIONS + "/{transaction_id}/" + com.coinbase.ApiConstants.COMPLETE)
+    @POST(com.coinbase.ApiConstants.ACCOUNTS + "/{account_id}/" + com.coinbase.ApiConstants.TRANSACTIONS + "/{transaction_id}/" + com.coinbase
+            .ApiConstants.COMPLETE)
     Call<Void> completeRequest(@Path("account_id") String accountId, @Path("transaction_id") String transactionId);
 
-    @POST(com.coinbase.ApiConstants.ACCOUNTS + "/{account_id}/" + com.coinbase.ApiConstants.TRANSACTIONS + "/{transaction_id}/" + com.coinbase.ApiConstants.RESEND)
+    @POST(com.coinbase.ApiConstants.ACCOUNTS + "/{account_id}/" + com.coinbase.ApiConstants.TRANSACTIONS + "/{transaction_id}/" + com.coinbase
+            .ApiConstants.RESEND)
     Call<Void> resendRequest(@Path("account_id") String accountId, @Path("transaction_id") String transactionId);
 
     @DELETE(com.coinbase.ApiConstants.ACCOUNTS + "/{account_id}/" + com.coinbase.ApiConstants.TRANSACTIONS + "/{transaction_id}")

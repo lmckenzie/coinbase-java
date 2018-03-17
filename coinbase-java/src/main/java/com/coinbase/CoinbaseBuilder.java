@@ -6,16 +6,15 @@ import javax.net.ssl.SSLContext;
 
 import rx.Scheduler;
 
+@SuppressWarnings("unused")
 public class CoinbaseBuilder {
 
     String access_token;
     String api_key;
     String api_secret;
-    String acct_id;
     SSLContext ssl_context;
     URL base_oauth_url;
-    URL base_api_url;
-    com.coinbase.CallbackVerifier callback_verifier;
+    CallbackVerifier callback_verifier;
     Scheduler scheduler;
     int cacheSize;
 
@@ -58,20 +57,9 @@ public class CoinbaseBuilder {
     }
 
     /**
-     * Specify the account id to be used for account-specific requests
-     *
-     * @param acct_id the account id
-     * @return this CoinbaseBuilder object
-     */
-    public CoinbaseBuilder withAccountId(String acct_id) {
-        this.acct_id = acct_id;
-        return this;
-    }
-
-    /**
      * Specify the verifier used to verify merchant callbacks
      *
-     * @param callback_verifier
+     * @param callback_verifier CallbackVerifier
      * @return this CoinbaseBuilder object
      */
     public CoinbaseBuilder withCallbackVerifier(CallbackVerifier callback_verifier) {
@@ -99,7 +87,6 @@ public class CoinbaseBuilder {
      * @return this CoinbaseBuilder object
      */
     public CoinbaseBuilder withBaseApiURL(URL base_api_url) {
-        this.base_api_url = base_api_url;
         return this;
     }
 

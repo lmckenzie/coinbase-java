@@ -1,9 +1,9 @@
 package com.coinbase.coinbasesample;
 
 import android.content.Intent;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
@@ -12,7 +12,7 @@ import android.widget.TextView;
 import com.coinbase.CallbackWithRetrofit;
 import com.coinbase.Coinbase;
 import com.coinbase.OAuth;
-import com.coinbase.v1.entity.OAuthTokensResponse;
+import com.coinbase.auth.AccessToken;
 import com.coinbase.v2.models.user.User;
 
 import butterknife.BindView;
@@ -94,16 +94,16 @@ public class MainActivity extends AppCompatActivity {
         Coinbase coinbase = ((MainApplication)getApplicationContext()).getClient();
         coinbase.getUser(new CallbackWithRetrofit<User>() {
             @Override
-            public void onResponse(Call<User> call, Response<User> response, Retrofit retrofit) {
+            public void onResponse(@NonNull Call<User> call, Response<User> response, @NonNull Retrofit retrofit) {
                 if (response.isSuccessful()) {
-                    userTextView.setText("User: " + response.body().getData().getName());
+                    userTextView.setText(String.format("User: %s", response.body().getData().getName()));
                     enableButtons(true);
                 } else
                     handleLoginError(Utils.getErrorMessage(response, retrofit));
             }
 
             @Override
-            public void onFailure(Call<User> call, Throwable t) {
+            public void onFailure(@NonNull Call<User> call, @NonNull Throwable t) {
                 handleLoginError(null);
             }
         });
@@ -121,15 +121,15 @@ public class MainActivity extends AppCompatActivity {
         enableButtons(false);
     }
 
-    public class CompleteAuthorizationTask extends AsyncTask<Void, Void, OAuthTokensResponse> {
+    public class CompleteAuthorizationTask extends AsyncTask<Void, Void, Response<AccessToken>> {
         private Intent mIntent;
 
-        public CompleteAuthorizationTask(Intent intent) {
+        CompleteAuthorizationTask(Intent intent) {
             mIntent = intent;
         }
 
         @Override
-        public OAuthTokensResponse doInBackground(Void... params) {
+        public Response<AccessToken> doInBackground(Void... params) {
             try {
                 final OAuth oauth = ((MainApplication)getApplicationContext()).getOAuth();
                 return oauth.completeAuthorization(MainActivity.this,
@@ -143,10 +143,12 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onPostExecute(OAuthTokensResponse tokens) {
-            Coinbase coinbase = ((MainApplication)getApplicationContext()).getClient();
-            coinbase.init(MainActivity.this, tokens.getAccessToken());
-            getUser();
+        public void onPostExecute(Response<AccessToken> tokens) {
+            if(tokens.isSuccessful()){
+                Coinbase coinbase = ((MainApplication)getApplicationContext()).getClient();
+                coinbase.init(MainActivity.this, tokens.body().getAccessToken());
+                getUser();
+            }
         }
     }
 

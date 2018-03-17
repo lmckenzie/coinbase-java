@@ -1,7 +1,7 @@
 package com.coinbase.coinbasesample;
 
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -10,10 +10,11 @@ import com.coinbase.CallbackWithRetrofit;
 import com.coinbase.Coinbase;
 import com.coinbase.v2.models.price.Price;
 
+import java.util.HashMap;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import retrofit2.Call;
-import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 
@@ -47,7 +48,7 @@ public class DataActivity extends AppCompatActivity {
         sellPriceButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                coinbase.getSellPrice(BTC, USD, null, new CallbackWithRetrofit<Price>() {
+                coinbase.getSellPrice(BTC, USD, new HashMap<String, Object>(), new CallbackWithRetrofit<Price>() {
                     @Override
                     public void onResponse(Call<Price> call, Response<Price> response, Retrofit retrofit) {
                         handleResponse(response);
@@ -64,7 +65,7 @@ public class DataActivity extends AppCompatActivity {
         buyPriceButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                coinbase.getBuyPrice(BTC, USD, null, new CallbackWithRetrofit<Price>() {
+                coinbase.getBuyPrice(BTC, USD,  new HashMap<String, Object>(), new CallbackWithRetrofit<Price>() {
                     @Override
                     public void onResponse(Call<Price> call, Response<Price> response, Retrofit retrofit) {
                         handleResponse(response);
@@ -81,7 +82,7 @@ public class DataActivity extends AppCompatActivity {
         spotPriceButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                coinbase.getSpotPrice(BTC, USD, null, new CallbackWithRetrofit<Price>() {
+                coinbase.getSpotPrice(BTC, USD,  new HashMap<String, Object>(), new CallbackWithRetrofit<Price>() {
                     @Override
                     public void onResponse(Call<Price> call, Response<Price> response, Retrofit retrofit) {
                         handleResponse(response);

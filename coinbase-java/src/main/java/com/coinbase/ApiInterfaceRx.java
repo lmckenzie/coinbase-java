@@ -31,11 +31,15 @@ import retrofit2.http.QueryMap;
 import rx.Observable;
 
 public interface ApiInterfaceRx {
+
+    @POST(ApiConstants.TOKEN)
+    Observable<Response<AccessToken>> getTokens(@Body Map<String, Object> body);
+
     @POST(ApiConstants.TOKEN)
     Observable<Response<AccessToken>> refreshTokens(@Body HashMap<String, Object> body);
 
     @POST(ApiConstants.REVOKE)
-    Observable<Response<Void>> revokeToken(@Body HashMap<String, Object> body);
+    Observable<Response<Void>> revokeToken(@Body Map<String, Object> body);
 
     @GET(ApiConstants.USER)
     Observable<Response<User>> getUser();
