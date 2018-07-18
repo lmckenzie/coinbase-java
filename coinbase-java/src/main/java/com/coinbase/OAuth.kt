@@ -4,9 +4,9 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import com.coinbase.auth.AccessToken
-import com.coinbase.v1.entity.OAuthCodeRequest
-import com.coinbase.v1.exception.CoinbaseException
-import com.coinbase.v1.exception.UnauthorizedException
+import com.coinbase.v2.models.OAuthCodeRequest
+import com.coinbase.exception.CoinbaseException
+import com.coinbase.exception.UnauthorizedException
 import retrofit2.Response
 import java.io.IOException
 import java.util.*
@@ -30,14 +30,11 @@ class OAuth(private val coinbase: Coinbase) {
         request.clientId = clientId
         request.scope = scope
         request.redirectUri = redirectUri
-        request.meta = meta
+        request.meta = meta ?: OAuthCodeRequest.Meta()
 
         val authorizationUri = coinbase.getAuthorizationUri(request)
-
         val i = Intent(Intent.ACTION_VIEW)
-        var androidUri = Uri.parse(authorizationUri.toString())
-        androidUri = androidUri.buildUpon().appendQueryParameter("state", getLoginCSRFToken(context)).build()
-        i.data = androidUri
+        i.data = Uri.parse(authorizationUri.toString()).buildUpon().appendQueryParameter("state", getLoginCSRFToken(context)).build()
         context.startActivity(i)
     }
 

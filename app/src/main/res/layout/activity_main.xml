@@ -13,7 +13,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Auth status: ..."
-        android:id="@+id/user_tv"
+        android:id="@+id/userText"
         android:layout_centerHorizontal="true"
         android:padding="10dp" />
 
@@ -21,25 +21,25 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Authorize Application"
-        android:id="@+id/auth_btn"
+        android:id="@+id/authBtn"
         android:layout_centerHorizontal="true"
-        android:layout_below="@+id/user_tv" />
+        android:layout_below="@+id/userText" />
 
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Transactions"
-        android:id="@+id/transactions_btn"
+        android:id="@+id/transactionsBtn"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:layout_below="@+id/auth_btn" />
+        android:layout_below="@+id/authBtn" />
 
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Data"
-        android:id="@+id/data_btn"
-        android:layout_below="@+id/transactions_btn"
+        android:id="@+id/dataBtn"
+        android:layout_below="@+id/transactionsBtn"
         android:layout_centerHorizontal="true" />
 
 </RelativeLayout>

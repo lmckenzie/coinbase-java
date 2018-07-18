@@ -27,26 +27,6 @@ import com.coinbase.v1.entity.TransactionsResponse;
 import com.coinbase.v1.entity.Transfer;
 import com.coinbase.v1.entity.TransfersResponse;
 import com.coinbase.v1.entity.User;
-import com.coinbase.v1.exception.CoinbaseException;
-
-import org.apache.commons.io.output.NullOutputStream;
-import org.joda.money.CurrencyUnit;
-import org.joda.money.Money;
-import org.joda.time.DateTime;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
-
-import java.io.InputStream;
-import java.math.BigDecimal;
-import java.net.URL;
-import java.util.List;
-import java.util.Map;
-
-import javax.net.ssl.HttpsURLConnection;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

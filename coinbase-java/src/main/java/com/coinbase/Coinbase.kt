@@ -6,11 +6,13 @@ import android.content.Context
 import android.net.Uri
 import android.text.TextUtils
 import android.util.Log
+import com.coinbase.ApiConstants.*
 import com.coinbase.auth.AccessToken
 import com.coinbase.cache.OkHttpInMemoryLruCache
 import com.coinbase.coinbase_java.BuildConfig
-import com.coinbase.v1.entity.OAuthCodeRequest
-import com.coinbase.v1.exception.CoinbaseException
+import com.coinbase.exception.CoinbaseException
+import com.coinbase.v2.models.OAuthCodeRequest
+import com.coinbase.v2.models.User
 import com.coinbase.v2.models.account.Account
 import com.coinbase.v2.models.account.Accounts
 import com.coinbase.v2.models.exchangeRates.ExchangeRates
@@ -22,7 +24,6 @@ import com.coinbase.v2.models.supportedCurrencies.SupportedCurrencies
 import com.coinbase.v2.models.transactions.Transaction
 import com.coinbase.v2.models.transactions.Transactions
 import com.coinbase.v2.models.transfers.Transfer
-import com.coinbase.v2.models.user.User
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.Protocol
@@ -461,18 +462,16 @@ class Coinbase {
         } else {
             throw CoinbaseException("scope is required")
         }
-        if (params.meta != null) {
-            val meta = params.meta
-            if (meta.name != null) {
-                uriBuilder.appendQueryParameter("meta[name]", meta.name)
-            }
-            if (meta.sendLimitAmount != null) {
-                val sendLimit = meta.sendLimitAmount
-                uriBuilder.appendQueryParameter("meta[send_limit_amount]", sendLimit.amount.toPlainString())
-                uriBuilder.appendQueryParameter("meta[send_limit_currency]", sendLimit.currencyUnit.currencyCode)
-                if (meta.sendLimitPeriod != null) {
-                    uriBuilder.appendQueryParameter("meta[send_limit_period]", meta.sendLimitPeriod.toString())
-                }
+        val meta = params.meta
+        if (meta.name != null) {
+            uriBuilder.appendQueryParameter("meta[name]", meta.name)
+        }
+        if (meta.sendLimitAmount != null) {
+            val sendLimit = meta.sendLimitAmount
+            uriBuilder.appendQueryParameter("meta[send_limit_amount]", sendLimit?.amount?.toPlainString())
+            uriBuilder.appendQueryParameter("meta[send_limit_currency]", sendLimit?.currencyUnit?.currencyCode)
+            if (meta.sendLimitPeriod != null) {
+                uriBuilder.appendQueryParameter("meta[send_limit_period]", meta.sendLimitPeriod.toString())
             }
         }
         return uriBuilder.build()
@@ -480,12 +479,12 @@ class Coinbase {
 
     @Throws(CoinbaseException::class, IOException::class)
     fun getTokens(clientId: String, clientSecret: String, authCode: String, redirectUri: String?): Response<AccessToken>? {
-        val params = mapOf<String, Any>(
-                Pair("client_id", clientId),
-                Pair("client_secret", clientSecret),
-                Pair("code", authCode),
-                Pair("grant_type", "authorization_code"),
-                Pair("redirect_uri", redirectUri ?: "2_legged")
+        val params = mapOf(
+                Pair(ApiConstants.CLIENT_ID, clientId),
+                Pair(ApiConstants.CLIENT_SECRET, clientSecret),
+                Pair(ApiConstants.AUTH_CODE, authCode),
+                Pair(ApiConstants.GRANT_TYPE, ApiConstants.AUTHORIZATION_CODE),
+                Pair(ApiConstants.REDIRECT_URI, redirectUri ?: "2_legged")
         )
 
         val apiRetrofitPair = getOAuthApiService()
@@ -507,11 +506,13 @@ class Coinbase {
                       clientSecret: String,
                       refreshToken: String,
                       callback: CallbackWithRetrofit<AccessToken>?): Call<*> {
-        val params = HashMap<String, Any>()
-        params[ApiConstants.CLIENT_ID] = clientId
-        params[ApiConstants.CLIENT_SECRET] = clientSecret
-        params[ApiConstants.REFRESH_TOKEN] = refreshToken
-        params[ApiConstants.GRANT_TYPE] = ApiConstants.REFRESH_TOKEN
+
+        val params = mapOf(
+                Pair(ApiConstants.CLIENT_ID, clientId),
+                Pair(ApiConstants.CLIENT_SECRET, clientSecret),
+                Pair(ApiConstants.REFRESH_TOKEN, refreshToken),
+                Pair(ApiConstants.GRANT_TYPE, ApiConstants.REFRESH_TOKEN)
+        )
 
         val apiRetrofitPair = getOAuthApiService()
         val call = apiRetrofitPair.first.refreshTokens(params)
@@ -565,8 +566,7 @@ class Coinbase {
             return null
         }
 
-        val params = mutableMapOf<String, Any?>()
-        params[ApiConstants.TOKEN] = _accessToken
+        val params = mapOf(Pair(ApiConstants.TOKEN, _accessToken!!))
 
         val apiRetrofitPair = getOAuthApiService()
         val call = apiRetrofitPair.first.revokeToken(params)
@@ -600,9 +600,7 @@ class Coinbase {
             return null
         }
 
-        val params = mutableMapOf<String, Any?>()
-        params[ApiConstants.TOKEN] = _accessToken
-
+        val params = mapOf(Pair(ApiConstants.TOKEN, _accessToken!!))
         val apiRetrofitPair = getOAuthApiServiceRx()
         val revokeObservable = apiRetrofitPair.first.revokeToken(params)
         val retrofitObservable = Observable.just(apiRetrofitPair.second)
@@ -738,7 +736,7 @@ class Coinbase {
      * @return call object
      * @see [Online Documentation](https://developers.coinbase.com/api/v2.list-accounts)
      */
-    fun getAccounts(inOptions: HashMap<String, Any>, callback: CallbackWithRetrofit<Accounts>?): Call<*> {
+    fun getAccounts(inOptions: Map<String, String>, callback: CallbackWithRetrofit<Accounts>?): Call<*> {
         val options = cleanQueryMap(inOptions)
         val apiRetrofitPair = getApiService()
         val call = apiRetrofitPair.first.getAccounts(options)
@@ -765,7 +763,7 @@ class Coinbase {
      * @return observable object emitting accounts/retrofit pair
      * @see [Online Documentation](https://developers.coinbase.com/api/v2.list-accounts)
      */
-    fun getAccountsRx(inOptions: HashMap<String, Any>): Observable<Pair<Response<Accounts>, Retrofit>> {
+    fun getAccountsRx(inOptions: Map<String, String>): Observable<Pair<Response<Accounts>, Retrofit>> {
         val options = cleanQueryMap(inOptions)
         val apiRetrofitPair = getApiServiceRx()
 
@@ -783,7 +781,7 @@ class Coinbase {
      * @return call object
      * @see [Online Documentation](https://developers.coinbase.com/api/v2.create-account)
      */
-    fun createAccount(options: HashMap<String, Any>, callback: CallbackWithRetrofit<Account>?): Call<*> {
+    fun createAccount(options: Map<String, String>, callback: CallbackWithRetrofit<Account>?): Call<*> {
         val apiRetrofitPair = getApiService()
         val call = apiRetrofitPair.first.createAccount(options)
         call.enqueue(object : Callback<Account> {
@@ -809,7 +807,7 @@ class Coinbase {
      * @return observable object emitting account/retrofit pair
      * @see [Online Documentation](https://developers.coinbase.com/api/v2.create-account)
      */
-    fun createAccountRx(options: HashMap<String, Any>): Observable<Pair<retrofit2.Response<Account>, Retrofit>> {
+    fun createAccountRx(options: Map<String, String>): Observable<Pair<retrofit2.Response<Account>, Retrofit>> {
         val apiRetrofitPair = getApiServiceRx()
 
         val accountObservable = apiRetrofitPair.first.createAccount(options)
@@ -863,7 +861,7 @@ class Coinbase {
      * @return call object
      * @see [Online Documentation](https://developers.coinbase.com/api/v2.update-account)
      */
-    fun updateAccount(accountId: String, options: HashMap<String, Any>, callback: CallbackWithRetrofit<Account>?): Call<*> {
+    fun updateAccount(accountId: String, options: Map<String, String>, callback: CallbackWithRetrofit<Account>?): Call<*> {
         val apiRetrofitPair = getApiService()
         val call = apiRetrofitPair.first.updateAccount(accountId, options)
         call.enqueue(object : Callback<Account> {
@@ -889,7 +887,7 @@ class Coinbase {
      * @see [Online Documentation](https://developers.coinbase.com/api/v2.update-account)
      */
     fun updateAccountRx(accountId: String,
-                        options: HashMap<String, Any>): Observable<Pair<retrofit2.Response<Account>, Retrofit>> {
+                        options: Map<String, String>): Observable<Pair<retrofit2.Response<Account>, Retrofit>> {
 
         val apiRetrofitPair = getApiServiceRx()
 
@@ -951,7 +949,7 @@ class Coinbase {
      * @see [Online Documentation](https://developers.coinbase.com/api/v2.list-transactions)
      */
     fun getTransactions(accountId: String,
-                        inOptions: HashMap<String, Any>,
+                        inOptions: Map<String, String>,
                         expandOptions: List<String>,
                         callback: CallbackWithRetrofit<Transactions>?): Call<*> {
         val options = cleanQueryMap(inOptions)
@@ -984,7 +982,7 @@ class Coinbase {
      * @see [Online Documentation](https://developers.coinbase.com/api/v2.list-transactions)
      */
     fun getTransactionsRx(accountId: String,
-                          inOptions: HashMap<String, Any>,
+                          inOptions: Map<String, String>,
                           expandOptions: List<String>): Observable<Pair<retrofit2.Response<Transactions>, Retrofit>> {
         val options = cleanQueryMap(inOptions)
         val apiRetrofitPair = getApiServiceRx()
@@ -1189,10 +1187,11 @@ class Coinbase {
      * @return call object
      * @see [Online Documentation](https://developers.coinbase.com/api/v2.send-money)
      */
-    fun sendMoney(accountId: String, params: HashMap<String, Any>, callback: CallbackWithRetrofit<Transaction>?): Call<*> {
-        params[com.coinbase.ApiConstants.TYPE] = com.coinbase.ApiConstants.SEND
+    fun sendMoney(accountId: String, params: Map<String, String>, callback: CallbackWithRetrofit<Transaction>?): Call<*> {
+        val sendParams = params.toMutableMap()
+        sendParams[com.coinbase.ApiConstants.TYPE] = SEND
         val apiRetrofitPair = getApiService()
-        val call = apiRetrofitPair.first.sendMoney(accountId, params)
+        val call = apiRetrofitPair.first.sendMoney(accountId, sendParams)
         call.enqueue(object : Callback<Transaction> {
 
             override fun onResponse(call: Call<Transaction>, response: retrofit2.Response<Transaction>) {
@@ -1218,11 +1217,11 @@ class Coinbase {
      * @see [Online Documentation](https://developers.coinbase.com/api/v2.send-money)
      */
     fun sendMoneyRx(accountId: String,
-                    params: HashMap<String, Any>): Observable<Pair<retrofit2.Response<Transaction>, Retrofit>> {
-        params[com.coinbase.ApiConstants.TYPE] = com.coinbase.ApiConstants.SEND
-
+                    params: Map<String, String>): Observable<Pair<retrofit2.Response<Transaction>, Retrofit>> {
+        val sendParams = params.toMutableMap()
+        sendParams[com.coinbase.ApiConstants.TYPE] = SEND
         val apiRetrofitPair = getApiServiceRx()
-        val observable = apiRetrofitPair.first.sendMoney(accountId, params)
+        val observable = apiRetrofitPair.first.sendMoney(accountId, sendParams)
 
         val retrofitObservable = Observable.just(apiRetrofitPair.second)
         return combineLatest(observable, retrofitObservable) { a, b -> Pair(a, b) }
@@ -1236,10 +1235,11 @@ class Coinbase {
      * @return call object
      * @see [Online Documentation](https://developers.coinbase.com/api/v2.request-money)
      */
-    fun requestMoney(accountId: String, params: HashMap<String, Any>, callback: CallbackWithRetrofit<Transaction>?): Call<*> {
-        params[com.coinbase.ApiConstants.TYPE] = com.coinbase.ApiConstants.REQUEST
+    fun requestMoney(accountId: String, params: Map<String, String>, callback: CallbackWithRetrofit<Transaction>?): Call<*> {
+        val requestParams = params.toMutableMap()
+        requestParams[com.coinbase.ApiConstants.TYPE] = REQUEST
         val apiRetrofitPair = getApiService()
-        val call = apiRetrofitPair.first.requestMoney(accountId, params)
+        val call = apiRetrofitPair.first.requestMoney(accountId, requestParams)
         call.enqueue(object : Callback<Transaction> {
 
             override fun onResponse(call: Call<Transaction>, response: retrofit2.Response<Transaction>) {
@@ -1265,11 +1265,11 @@ class Coinbase {
      * @see [Online Documentation](https://developers.coinbase.com/api/v2.request-money)
      */
     fun requestMoneyRx(accountId: String,
-                       params: HashMap<String, Any>): Observable<Pair<retrofit2.Response<Transaction>, Retrofit>> {
-        params[com.coinbase.ApiConstants.TYPE] = com.coinbase.ApiConstants.REQUEST
-
+                       params: Map<String, String>): Observable<Pair<retrofit2.Response<Transaction>, Retrofit>> {
+        val requestParams = params.toMutableMap()
+        requestParams[com.coinbase.ApiConstants.TYPE] = REQUEST
         val apiRetrofitPair = getApiServiceRx()
-        val observable = apiRetrofitPair.first.requestMoney(accountId, params)
+        val observable = apiRetrofitPair.first.requestMoney(accountId, requestParams)
 
         val retrofitObservable = Observable.just(apiRetrofitPair.second)
         return combineLatest(observable, retrofitObservable) { a, b -> Pair(a, b) }
@@ -1283,10 +1283,11 @@ class Coinbase {
      * @return call object
      * @see [Online Documentation](https://developers.coinbase.com/api/v2.transfer-money-between-accounts)
      */
-    fun transferMoney(accountId: String, params: HashMap<String, Any>, callback: CallbackWithRetrofit<Transaction>?): Call<*> {
-        params[com.coinbase.ApiConstants.TYPE] = ApiConstants.TRANSFER
+    fun transferMoney(accountId: String, params: Map<String, String>, callback: CallbackWithRetrofit<Transaction>?): Call<*> {
+        val transferParams = params.toMutableMap()
+        transferParams[com.coinbase.ApiConstants.TYPE] = TRANSFER
         val apiRetrofitPair = getApiService()
-        val call = apiRetrofitPair.first.transferMoney(accountId, params)
+        val call = apiRetrofitPair.first.transferMoney(accountId, transferParams)
         call.enqueue(object : Callback<Transaction> {
 
             override fun onResponse(call: Call<Transaction>, response: retrofit2.Response<Transaction>) {
@@ -1310,11 +1311,11 @@ class Coinbase {
      * @return observable object emitting transaction/retrofit pair
      * @see [Online Documentation](https://developers.coinbase.com/api/v2.transfer-money-between-accounts)
      */
-    fun transferMoneyRx(accountId: String, params: HashMap<String, Any>): Observable<Pair<retrofit2.Response<Transaction>, Retrofit>> {
-        params[com.coinbase.ApiConstants.TYPE] = ApiConstants.TRANSFER
-
+    fun transferMoneyRx(accountId: String, params: Map<String, String>): Observable<Pair<retrofit2.Response<Transaction>, Retrofit>> {
+        val transferParams = params.toMutableMap()
+        transferParams[com.coinbase.ApiConstants.TYPE] = TRANSFER
         val apiRetrofitPair = getApiServiceRx()
-        val observable = apiRetrofitPair.first.transferMoney(accountId, params)
+        val observable = apiRetrofitPair.first.transferMoney(accountId, transferParams)
 
         val retrofitObservable = Observable.just(apiRetrofitPair.second)
         return combineLatest(observable, retrofitObservable) { a, b -> Pair(a, b) }
@@ -1328,7 +1329,7 @@ class Coinbase {
      * @return call object
      * @see [Online Documentation](https://developers.coinbase.com/api/v2.buy-bitcoin)
      */
-    fun buyBitcoin(accountId: String, params: HashMap<String, Any>, callback: CallbackWithRetrofit<Transfer>?): Call<*> {
+    fun buyBitcoin(accountId: String, params: Map<String, String>, callback: CallbackWithRetrofit<Transfer>?): Call<*> {
         val apiRetrofitPair = getApiService()
         val call = apiRetrofitPair.first.buyBitcoin(accountId, params)
         call.enqueue(object : Callback<Transfer> {
@@ -1354,7 +1355,7 @@ class Coinbase {
      * @return observable object emitting transfer/retrofit pair
      * @see [Online Documentation](https://developers.coinbase.com/api/v2.buy-bitcoin)
      */
-    fun buyBitcoinRx(accountId: String, params: HashMap<String, Any>): Observable<Pair<retrofit2.Response<Transfer>, Retrofit>> {
+    fun buyBitcoinRx(accountId: String, params: Map<String, String>): Observable<Pair<retrofit2.Response<Transfer>, Retrofit>> {
         val apiRetrofitPair = getApiServiceRx()
         val observable = apiRetrofitPair.first.buyBitcoin(accountId, params)
 
@@ -1419,7 +1420,7 @@ class Coinbase {
      * @return call object
      * @see [Online Documentation](https://developers.coinbase.com/api/v2.sell-bitcoin)
      */
-    fun sellBitcoin(accountId: String, params: HashMap<String, Any>, callback: CallbackWithRetrofit<Transfer>?): Call<*> {
+    fun sellBitcoin(accountId: String, params: Map<String, String>, callback: CallbackWithRetrofit<Transfer>?): Call<*> {
         val apiRetrofitPair = getApiService()
         val call = apiRetrofitPair.first.sellBitcoin(accountId, params)
         call.enqueue(object : Callback<Transfer> {
@@ -1446,7 +1447,7 @@ class Coinbase {
      * @see [Online Documentation](https://developers.coinbase.com/api/v2.sell-bitcoin)
      */
     fun sellBitcoinRx(accountId: String,
-                      params: HashMap<String, Any>): Observable<Pair<retrofit2.Response<Transfer>, Retrofit>> {
+                      params: Map<String, String>): Observable<Pair<retrofit2.Response<Transfer>, Retrofit>> {
         val apiRetrofitPair = getApiServiceRx()
         val observable = apiRetrofitPair.first.sellBitcoin(accountId, params)
 
@@ -1514,7 +1515,7 @@ class Coinbase {
      * @see [Online Documentation](https://developers.coinbase.com/api/v2.get-spot-price)
      */
     fun getSellPrice(baseCurrency: String, fiatCurrency: String,
-                     inParams: HashMap<String, Any>, callback: CallbackWithRetrofit<Price>?): Call<*> {
+                     inParams: Map<String, String>, callback: CallbackWithRetrofit<Price>?): Call<*> {
         val params = cleanQueryMap(inParams)
         val apiRetrofitPair = getApiService()
 
@@ -1543,7 +1544,7 @@ class Coinbase {
      * @return observable object emitting price/retrofit pair
      * @see [Online Documentation](https://developers.coinbase.com/api/v2.get-spot-price)
      */
-    fun getSellPriceRx(baseCurrency: String, fiatCurrency: String, inParams: HashMap<String, Any>): Observable<Pair<retrofit2.Response<Price>, Retrofit>> {
+    fun getSellPriceRx(baseCurrency: String, fiatCurrency: String, inParams: Map<String, String>): Observable<Pair<retrofit2.Response<Price>, Retrofit>> {
         val params = cleanQueryMap(inParams)
         val apiRetrofitPair = getApiServiceRx()
 
@@ -1563,7 +1564,7 @@ class Coinbase {
      * @see [Online Documentation](https://developers.coinbase.com/api/v2.get-spot-price)
      */
     fun getBuyPrice(baseCurrency: String, fiatCurrency: String,
-                    inParams: HashMap<String, Any>, callback: CallbackWithRetrofit<Price>?): Call<*> {
+                    inParams: Map<String, String>, callback: CallbackWithRetrofit<Price>?): Call<*> {
         val params = cleanQueryMap(inParams)
         val apiRetrofitPair = getApiService()
 
@@ -1593,7 +1594,7 @@ class Coinbase {
      * @return observable object emitting price/retrofit pair
      * @see [Online Documentation](https://developers.coinbase.com/api/v2.get-spot-price)
      */
-    fun getBuyPriceRx(baseCurrency: String, fiatCurrency: String, inParams: HashMap<String, Any>): Observable<Pair<retrofit2.Response<Price>, Retrofit>> {
+    fun getBuyPriceRx(baseCurrency: String, fiatCurrency: String, inParams: Map<String, String>): Observable<Pair<retrofit2.Response<Price>, Retrofit>> {
         val params = cleanQueryMap(inParams)
         val apiRetrofitPair = getApiServiceRx()
 
@@ -1613,7 +1614,7 @@ class Coinbase {
      * @see [Online Documentation](https://developers.coinbase.com/api/v2.get-spot-price)
      */
     fun getSpotPrice(baseCurrency: String, fiatCurrency: String,
-                     inParams: HashMap<String, Any>, callback: CallbackWithRetrofit<Price>?): Call<*> {
+                     inParams: Map<String, String>, callback: CallbackWithRetrofit<Price>?): Call<*> {
         val params = cleanQueryMap(inParams)
         val apiRetrofitPair = getApiService()
 
@@ -1643,7 +1644,7 @@ class Coinbase {
      * @return observable object emitting price/retrofit pair
      * @see [Online Documentation](https://developers.coinbase.com/api/v2.get-spot-price)
      */
-    fun getSpotPriceRx(baseCurrency: String, fiatCurrency: String, inParams: HashMap<String, Any>): Observable<Pair<retrofit2.Response<Price>, Retrofit>> {
+    fun getSpotPriceRx(baseCurrency: String, fiatCurrency: String, inParams: Map<String, String>): Observable<Pair<retrofit2.Response<Price>, Retrofit>> {
         val params = cleanQueryMap(inParams)
         val apiRetrofitPair = getApiServiceRx()
 
@@ -1662,7 +1663,7 @@ class Coinbase {
      * @see [Online Documentation](https://developers.coinbase.com/api/v2.get-spot-price)
      */
     fun getSpotPrices(fiatCurrency: String,
-                      inParams: HashMap<String, Any>, callback: CallbackWithRetrofit<Prices>?): Call<*> {
+                      inParams: Map<String, String>, callback: CallbackWithRetrofit<Prices>?): Call<*> {
         val params = cleanQueryMap(inParams)
         val apiRetrofitPair = getApiService()
 
@@ -1691,7 +1692,7 @@ class Coinbase {
      * @return observable object emitting price/retrofit pair
      * @see [Online Documentation](https://developers.coinbase.com/api/v2.get-spot-price)
      */
-    fun getSpotPricesRx(fiatCurrency: String, inParams: HashMap<String, Any>): Observable<Pair<retrofit2.Response<Prices>, Retrofit>> {
+    fun getSpotPricesRx(fiatCurrency: String, inParams: Map<String, String>): Observable<Pair<retrofit2.Response<Prices>, Retrofit>> {
         val params = cleanQueryMap(inParams)
         val apiRetrofitPair = getApiServiceRx()
 
@@ -1752,7 +1753,7 @@ class Coinbase {
      * @return call object
      * @see [Online Documentation](https://developers.coinbase.com/api/v2.deposit-funds)
      */
-    fun depositFunds(accountId: String, params: HashMap<String, Any>, callback: CallbackWithRetrofit<Transfer>?): Call<*> {
+    fun depositFunds(accountId: String, params: Map<String, String>, callback: CallbackWithRetrofit<Transfer>?): Call<*> {
         val apiRetrofitPair = getApiService()
         val call = apiRetrofitPair.first.depositFunds(accountId, params)
         call.enqueue(object : Callback<Transfer> {
@@ -1779,7 +1780,7 @@ class Coinbase {
      * @see [Online Documentation](https://developers.coinbase.com/api/v2.deposit-funds)
      */
     fun depositFundsRx(accountId: String,
-                       params: HashMap<String, Any>): Observable<Pair<retrofit2.Response<Transfer>, Retrofit>> {
+                       params: Map<String, String>): Observable<Pair<retrofit2.Response<Transfer>, Retrofit>> {
         val apiRetrofitPair = getApiServiceRx()
 
         val observable = apiRetrofitPair.first.depositFunds(accountId, params)
@@ -1840,7 +1841,7 @@ class Coinbase {
      * @return call object
      * @see [Online Documentation](https://developers.coinbase.com/api/v2.withdraw-funds)
      */
-    fun withdrawFunds(accountId: String, params: HashMap<String, Any>, callback: CallbackWithRetrofit<Transfer>?): Call<*> {
+    fun withdrawFunds(accountId: String, params: Map<String, String>, callback: CallbackWithRetrofit<Transfer>?): Call<*> {
         val apiRetrofitPair = getApiService()
         val call = apiRetrofitPair.first.withdrawFunds(accountId, params)
         call.enqueue(object : Callback<Transfer> {
@@ -1868,7 +1869,7 @@ class Coinbase {
      * @see [Online Documentation](https://developers.coinbase.com/api/v2.withdraw-funds)
      */
     fun withdrawFundsRx(accountId: String,
-                        params: HashMap<String, Any>): Observable<Pair<retrofit2.Response<Transfer>, Retrofit>> {
+                        params: Map<String, String>): Observable<Pair<retrofit2.Response<Transfer>, Retrofit>> {
         val apiRetrofitPair = getApiServiceRx()
 
         val observable = apiRetrofitPair.first.withdrawFunds(accountId, params)
@@ -1974,7 +1975,7 @@ class Coinbase {
      * @return call object
      * @see [Online Documentation](https://developers.coinbase.com/api/v2.list-payment-methods)
      */
-    fun getPaymentMethods(inOptions: HashMap<String, Any>, callback: CallbackWithRetrofit<PaymentMethods>?): Call<*> {
+    fun getPaymentMethods(inOptions: Map<String, String>, callback: CallbackWithRetrofit<PaymentMethods>?): Call<*> {
         val options = cleanQueryMap(inOptions)
         val apiRetrofitPair = getApiService()
 
@@ -2001,7 +2002,7 @@ class Coinbase {
      * @return observable object emitting paymentmethods/retrofit pair
      * @see [Online Documentation](https://developers.coinbase.com/api/v2.list-payment-methods)
      */
-    fun getPaymentMethodsRx(inOptions: HashMap<String, Any>): Observable<Pair<retrofit2.Response<PaymentMethods>, Retrofit>> {
+    fun getPaymentMethodsRx(inOptions: Map<String, String>): Observable<Pair<retrofit2.Response<PaymentMethods>, Retrofit>> {
         val options = cleanQueryMap(inOptions)
         val apiRetrofitPair = getApiServiceRx()
 
@@ -2019,7 +2020,7 @@ class Coinbase {
      * @return call object
      * @see [Online Documentation](https://developers.coinbase.com/api/v2.get-exchange-rates)
      */
-    fun getExchangeRates(inCurrency: HashMap<String, Any>, callback: CallbackWithRetrofit<ExchangeRates>?): Call<*> {
+    fun getExchangeRates(inCurrency: Map<String, String>, callback: CallbackWithRetrofit<ExchangeRates>?): Call<*> {
         val currency = cleanQueryMap(inCurrency)
         val apiRetrofitPair = getApiService()
 
@@ -2045,7 +2046,7 @@ class Coinbase {
      * @return observable object emitting exchangerates/retrofit pair
      * @see [Online Documentation](https://developers.coinbase.com/api/v2.get-exchange-rates)
      */
-    fun getExchangeRatesRx(inCurrency: HashMap<String, Any>): Observable<Pair<retrofit2.Response<ExchangeRates>, Retrofit>> {
+    fun getExchangeRatesRx(inCurrency: Map<String, String>): Observable<Pair<retrofit2.Response<ExchangeRates>, Retrofit>> {
         val currency = cleanQueryMap(inCurrency)
         val apiRetrofitPair = getApiServiceRx()
 
@@ -2087,7 +2088,7 @@ class Coinbase {
      *
      * @param options HashMap
      */
-    private fun cleanQueryMap(options: HashMap<String, Any>?): HashMap<String, Any> {
+    private fun cleanQueryMap(options: Map<String, String>?): Map<String, String> {
         return if (options == null) {
             HashMap()
         } else {
@@ -2101,8 +2102,8 @@ class Coinbase {
         }
     }
 
-    private fun getRefreshTokensParams(clientId: String, clientSecret: String, refreshToken: String): HashMap<String, Any> {
-        val params = HashMap<String, Any>()
+    private fun getRefreshTokensParams(clientId: String, clientSecret: String, refreshToken: String): Map<String, String> {
+        val params = HashMap<String, String>()
         params[ApiConstants.CLIENT_ID] = clientId
         params[ApiConstants.CLIENT_SECRET] = clientSecret
         params[ApiConstants.REFRESH_TOKEN] = refreshToken
@@ -2110,21 +2111,17 @@ class Coinbase {
         return params
     }
 
-    private fun getUpdateUserParams(name: String?, timeZone: String?, nativeCurrency: String?): HashMap<String, Any> {
-        val params = HashMap<String, Any>()
-
-        if (name != null) {
-            params[ApiConstants.NAME] = name
+    private fun getUpdateUserParams(name: String?, timeZone: String?, nativeCurrency: String?): Map<String, String> {
+        val params = HashMap<String, String>()
+        name?.let {
+            params[ApiConstants.NAME] = it
         }
-
-        if (timeZone != null) {
-            params[ApiConstants.TIME_ZONE] = timeZone
+        timeZone?.let {
+            params[ApiConstants.TIME_ZONE] = it
         }
-
-        if (nativeCurrency != null) {
-            params[ApiConstants.NATIVE_CURRENCY] = nativeCurrency
+        nativeCurrency?.let {
+            params[ApiConstants.NATIVE_CURRENCY] = it
         }
-
         return params
     }
 }

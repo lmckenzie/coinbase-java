@@ -13,31 +13,31 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="$0.00"
-        android:id="@+id/price_tv"
+        android:id="@+id/priceText"
         android:layout_centerHorizontal="true" />
 
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Sell Price"
-        android:id="@+id/sell_price_btn"
+        android:id="@+id/sellPriceBtn"
         android:layout_centerHorizontal="true"
-        android:layout_below="@+id/price_tv" />
+        android:layout_below="@+id/priceText" />
 
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Buy Price"
-        android:id="@+id/buy_price_btn"
-        android:layout_below="@+id/sell_price_btn"
+        android:id="@+id/buyPriceBtn"
+        android:layout_below="@+id/sellPriceBtn"
         android:layout_centerHorizontal="true" />
 
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Spot Price"
-        android:id="@+id/spot_price_btn"
-        android:layout_below="@+id/buy_price_btn"
+        android:id="@+id/spotPriceBtn"
+        android:layout_below="@+id/buyPriceBtn"
         android:layout_centerHorizontal="true" />
 
 </RelativeLayout>

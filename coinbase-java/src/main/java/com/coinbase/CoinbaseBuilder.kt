@@ -1,48 +1,48 @@
-package com.coinbase;
+package com.coinbase
 
-import java.net.URL;
+import rx.Scheduler
+import java.net.URL
+import javax.net.ssl.SSLContext
 
-import javax.net.ssl.SSLContext;
+@Suppress("unused")
+class CoinbaseBuilder {
 
-import rx.Scheduler;
-
-@SuppressWarnings("unused")
-public class CoinbaseBuilder {
-
-    String access_token;
-    String api_key;
-    String api_secret;
-    SSLContext ssl_context;
-    URL base_oauth_url;
-    CallbackVerifier callback_verifier;
-    Scheduler scheduler;
-    int cacheSize;
+    internal var access_token: String? = null
+    internal var api_key: String? = null
+    internal var api_secret: String? = null
+    internal var ssl_context: SSLContext? = null
+    internal var base_oauth_url: URL? = null
+    internal var callback_verifier: CallbackVerifier? = null
+    internal var scheduler: Scheduler? = null
+    internal var cacheSize: Int = 0
 
     /**
      * Build a new Coinbase client object with the specified options
      *
      * @return a new Coinbase client object
      */
-    public Coinbase build() {
-        return new Coinbase(this);
+    fun build(): Coinbase {
+        return Coinbase(this)
     }
 
     /**
      * Specify an access token to be used for authenticated requests
-     * <p>
+     *
+     *
      * Coinbase client objects built using an access token are thread-safe
      *
      * @param access_token the OAuth access token
      * @return this CoinbaseBuilder object
      */
-    public CoinbaseBuilder withAccessToken(String access_token) {
-        this.access_token = access_token;
-        return this;
+    fun withAccessToken(access_token: String): CoinbaseBuilder {
+        this.access_token = access_token
+        return this
     }
 
     /**
      * Specify the HMAC api key and secret to be used for authenticated requests
-     * <p>
+     *
+     *
      * Having more than one client with the same api/secret globally is unsupported
      * and will result in sporadic auth errors as the nonce is calculated from the system time.
      *
@@ -50,10 +50,10 @@ public class CoinbaseBuilder {
      * @param api_secret the HMAC API Secret
      * @return this CoinbaseBuilder object
      */
-    public CoinbaseBuilder withApiKey(String api_key, String api_secret) {
-        this.api_key = api_key;
-        this.api_secret = api_secret;
-        return this;
+    fun withApiKey(api_key: String, api_secret: String): CoinbaseBuilder {
+        this.api_key = api_key
+        this.api_secret = api_secret
+        return this
     }
 
     /**
@@ -62,9 +62,9 @@ public class CoinbaseBuilder {
      * @param callback_verifier CallbackVerifier
      * @return this CoinbaseBuilder object
      */
-    public CoinbaseBuilder withCallbackVerifier(CallbackVerifier callback_verifier) {
-        this.callback_verifier = callback_verifier;
-        return this;
+    fun withCallbackVerifier(callback_verifier: CallbackVerifier): CoinbaseBuilder {
+        this.callback_verifier = callback_verifier
+        return this
     }
 
     /**
@@ -73,48 +73,51 @@ public class CoinbaseBuilder {
      * @param ssl_context the SSLContext to be used
      * @return this CoinbaseBuilder object
      */
-    public CoinbaseBuilder withSSLContext(SSLContext ssl_context) {
-        this.ssl_context = ssl_context;
-        return this;
+    fun withSSLContext(ssl_context: SSLContext): CoinbaseBuilder {
+        this.ssl_context = ssl_context
+        return this
     }
 
     /**
      * Specify the base URL to be used for API requests
-     * <p>
+     *
+     *
      * By default, this is 'https://coinbase.com/api/v1/'
      *
      * @param base_api_url the base URL to use for API requests. Must return an instance of javax.net.ssl.HttpsURLConnection on openConnection.
      * @return this CoinbaseBuilder object
      */
-    public CoinbaseBuilder withBaseApiURL(URL base_api_url) {
-        return this;
+    fun withBaseApiURL(base_api_url: URL): CoinbaseBuilder {
+        return this
     }
 
     /**
      * Specify the base URL to be used for OAuth requests
-     * <p>
+     *
+     *
      * By default, this is 'https://coinbase.com/oauth/'
      *
      * @param base_oauth_url the base URL to use for OAuth requests. Must return an instance of javax.net.ssl.HttpsURLConnection on openConnection.
      * @return this CoinbaseBuilder object
      */
-    public CoinbaseBuilder withBaseOAuthURL(URL base_oauth_url) {
-        this.base_oauth_url = base_oauth_url;
-        return this;
+    fun withBaseOAuthURL(base_oauth_url: URL): CoinbaseBuilder {
+        this.base_oauth_url = base_oauth_url
+        return this
     }
 
     /**
      * Optional - specify the rx scheduler to run the subscriber (i.e. network io) requests on.
      * If you don't specify one, it's up to you to call subscribeOn with the scheduler you'd like to use.
-     * <p>
+     *
+     *
      * By default, this is 'https://coinbase.com/oauth/'
      *
      * @param scheduler the rx.Scheduler to run the background requests on.
      * @return this CoinbaseBuilder object
      */
-    public CoinbaseBuilder withScheduler(Scheduler scheduler) {
-        this.scheduler = scheduler;
-        return this;
+    fun withScheduler(scheduler: Scheduler): CoinbaseBuilder {
+        this.scheduler = scheduler
+        return this
     }
 
     /**
@@ -124,8 +127,8 @@ public class CoinbaseBuilder {
      *
      * @return this CoinbaseBuilder object
      */
-    public CoinbaseBuilder cacheSize(int cacheSize) {
-        this.cacheSize = cacheSize;
-        return this;
+    fun cacheSize(cacheSize: Int): CoinbaseBuilder {
+        this.cacheSize = cacheSize
+        return this
     }
 }
